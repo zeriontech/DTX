@@ -2,20 +2,20 @@ contract Market {
 
     address public owner;
     
-    struct Order
-    {
+    struct Order {
+        address owner;
+        uint32 id;
         uint price;
         uint amount;
-        uint timestamp;
-        uint owner;
-        uint nextOrder;
+        uint32 timestamp;
+        uint32 nextOrder;
     }
 
-    Order[] bids;
-    Order[] asks; 
+    mapping(uint32 => Order) bids; 
+    mapping(uint32 => Order) asks; 
 
-    uint highestBid;
-    uint lowestAsk; 
+    uint32 highestBidId;
+    uint32 lowestAskId; 
 
     uint32 public numberOfTrades;
 
@@ -23,54 +23,62 @@ contract Market {
     function Market() {
         owner = msg.sender;
         numberOfTrades = 0;
-        highestBid = -1;
-        lowestAsk = -1;
+        highestBidId = 0;
+        lowestAskId = 0;
     }
 
     // main function 
-    // params: 
-    // type 0 - bid, 1 - ask
-    // 
-    function trade(bool type, uint amount, uint price) {
+    function trade(bool ask, uint amount, uint price) {
 
-        if (amount < 0.1) throw;
+        if (amount < 1) throw;
+        
+        var amountLeft = amount; 
 
-        if (type == 0) {
+        uint amountToExchange = 0;
+        uint etherToExchange = 0;
+        
+        if (ask == false) {
             // bid, fill matchin asks and place order
-
-            amountLeft = amount; 
-
-            while (lowestAsk != -1 && amountLeft > 0 && asks[lowestAsk].price < price) { 
-                uint amountToExchange = 0;
-                uint etherToExchange = 0;
-                if (asks[lowestAsk].amount <= amountLeft) {
-                    amountLeft -= asks[lowestAsk].amount;
-                    amountToExchange = asks[lowestAsk].amount;
-                    etherToExchange = amountToExchange * asks[lowestAsk].price;
-                    lowestAsk = asks[lowestAsk].nextOrder; 
+            while (lowestAskId != 0 && amountLeft > 0 && asks[lowestAskId].price <= price) { 
+                if (asks[lowestAskId].amount <= amountLeft) {
+                    amountToExchange = asks[lowestAskId].amount;
+                    amountLeft -= amountToExchange;
+                    etherToExchange = amountToExchange * asks[lowestAskId].price;
+                    lowestAskId = asks[lowestAskId].nextOrder; 
                 } else { 
-                    asks[lowestAsk].amount -= amountLeft;
+                    asks[lowestAskId].amount -= amountLeft;
                     amountToExchange = amountLeft;
+                    etherToExchange = amountToExchange * asks[lowestAskId].price;
                     amountLeft = 0;
 
                 }
-                etherToExchange = amountToExchange * price
                 // TODO: send some ether to owner
                 // TODO: send amountToExchange tokens to msg.sender
                 // TODO: send event to light clients
 
-                
-                
             }
-            if 
             
-        } else {
-            // ask, fill matching bids and place order 
+        } else {  // ask
+            while (highestBidId != 0 && amountLeft > 0 && bids[highestBidId].price >= price) { 
+                if (bids[highestBidId].amount <= amountLeft) {
+                    amountLeft -= bids[highestBidId].amount;
+                    amountToExchange = bids[highestBidId].amount;
+                    etherToExchange = amountToExchange * bids[highestBidId].price;
+                    highestBidId = bids[highestBidId].nextOrder; 
+                } else { 
+                    bids[highestBidId].amount -= amountLeft;
+                    amountToExchange = amountLeft;
+                    etherToExchange = amountToExchange * asks[highestBidId].price;
+                    amountLeft = 0;
+
+                }
+                // TODO: 
+            }
 
         }
     }
 
-    // needs to be superiptimised 
+    // needs to be superoptimised 
     function placeOrder() internal {
 
     }
