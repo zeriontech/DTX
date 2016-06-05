@@ -1,3 +1,4 @@
+// TODO: Licence 
 contract Market {
 
     address public owner;
@@ -7,7 +8,6 @@ contract Market {
         uint32 id;
         uint price;
         uint amount;
-        uint32 timestamp;
         uint32 nextOrder;
     }
 
@@ -18,7 +18,8 @@ contract Market {
     uint32 lowestAskId; 
 
     uint32 public numberOfTrades;
-
+    uint32 public asksCounter;
+    uint32 public bidsCounter;
 
     function Market() {
         owner = msg.sender;
@@ -55,9 +56,8 @@ contract Market {
                 // TODO: send some ether to owner
                 // TODO: send amountToExchange tokens to msg.sender
                 // TODO: send event to light clients
-
             }
-            
+            if (amountLeft > 0) placeOrder(ask, amountLeft, price, msg.sender);
         } else {  // ask
             while (highestBidId != 0 && amountLeft > 0 && bids[highestBidId].price >= price) { 
                 if (bids[highestBidId].amount <= amountLeft) {
@@ -74,13 +74,50 @@ contract Market {
                 }
                 // TODO: 
             }
-
+            if (amountLeft > 0) placeOrder(ask, amountLeft, price, msg.sender);
         }
     }
 
     // needs to be superoptimised 
-    function placeOrder() internal {
-
+    function placeOrder(bool ask, uint amount, uint price, address owner) internal {
+        if (ask == false) {
+            // place bid order
+            uint32 previousBidId = 0;
+            uint32 bidId = highestBidId;
+            while (bidId != 0 && bids[bidId].price >= price) {
+                previousBidId = bidId;
+                bidId = bids[bidId].nextOrder;
+            }
+            bids[bidsCounter] = Order({
+                owner: owner,
+                id: bidsCounter,
+                price: price,
+                amount: amount,
+                nextOrder: bidId
+            });
+            if (previousBidId != 0) {
+                bids[previousBidId].nextOrder = bidsCounter;
+            }
+            bidsCounter += 1;
+        } else {
+            uint32 previousAskId = 0;
+            uint32 askId = lowestAskId;
+            while (askId != 0 && asks[askId].price <= price) {
+                previousAskId = askId;
+                askId = asks[askId].nextOrder;
+            }
+            asks[asksCounter] = Order({
+                owner: owner,
+                id: asksCounter,
+                price: price,
+                amount: amount,
+                nextOrder: askId
+            });
+            if (previousAskId != 0) {
+                asks[previousAskId].nextOrder = asksCounter;
+            }
+            asksCounter += 1;
+        }
     }
 
 
