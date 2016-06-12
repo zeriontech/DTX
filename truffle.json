@@ -1,0 +1,30 @@
+{
+  "build": {
+    "main.html": {
+      "files": [
+        "client/main.html"
+      ],
+      "post-process": []
+    },
+    "main.js": {
+      "files": [
+        "client/main.js"
+      ],
+      "post-process": [
+        "bootstrap",
+        "frontend-dependencies"
+      ]
+    },
+    "main.css": [
+      "client/main.css"
+    ],
+    "images/": "images/"
+  },
+  "deploy": [
+    "MetaCoin"
+  ],
+  "rpc": {
+    "host": "localhost",
+    "port": 8545
+  }
+}
